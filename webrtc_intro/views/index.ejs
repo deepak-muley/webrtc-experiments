@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Intro to WebRTC</title>
+        <link rel="stylesheet" type="text/css" href="styles.css"
+    </head>
+    <body>
+        <div>
+            Video: <select id="camera"></select>
+            Audit: <select id="audio"></select>
+        </div>
+        <video autoplay></video>
+        <script>
+
+            var videoArea = document.querySelector("video")
+            var videoSelect = document.querySelector("#camera")
+            var audioSelect = document.querySelector("#audio")
+
+            function startStream() {
+                navigator.getUserMedia = navigator.getUserMedia || 
+                navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+                var videoSource = videoSelect.value
+                var constraints = {
+                    audit: true, 
+                    video: {
+                        mandatory: {
+                            minWidth: 640,
+                            maxWidth: 640,
+                            minHeight: 360,
+                            maxHeight: 480
+                        },
+                        optional: [{
+                            sourceId: videoSource
+                        }]
+                    }
+                }
+                navigator.getUserMedia(constraints, onSuccess, onError)
+            }
+
+            navigator.mediaDevices.enumerateDevices()
+            .then(function (devices) {
+                devices.forEach(function (device) {
+                    var option = document.createElement('option');
+                    option.value = device.deviceId;
+                    if (device.kind === 'videoinput') {
+                        option.text = device.label || 'camera' + (videoSelect.length + 1);
+                        videoSelect.appendChild(option);
+                    } else if (device.kind == 'audioinput') {
+                        option.text = device.label || 'mic' + (audioSelect.length + 1);
+                        audioSelect.appendChild(option);
+                    }
+                });
+            })
+            .catch(function (err) {
+                console.log(err.name + ": " + err.message);
+            });            
+
+            videoSelect.onchange = startStream
+
+            startStream();
+
+
+            function onSuccess(stream) {
+                console.log("Success! we have a stream")
+                videoArea.srcObject = stream;
+                videoArea.className = "grayscale_filter"
+                videoArea.play()
+            }
+
+            function onError(error) {
+                console.log("Error with GetUserMedia", error);
+            }
+        </script>
+    </body>
+</html>
